@@ -1,5 +1,7 @@
 // Copyright 2026 Minjo Kim
 // SPDX-License-Identifier: Apache-2.0
+// Modified by PickNik Inc., 2026: route Type 0x15 feedback by source motor ID.
+// See NOTICE for source history.
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE

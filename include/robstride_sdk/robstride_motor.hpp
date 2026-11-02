@@ -1,5 +1,7 @@
 // Copyright 2026 Minjo Kim
 // SPDX-License-Identifier: Apache-2.0
+// Modified by PickNik Inc., 2026: decode little-endian fault/warning words and
+// track complete Type-2 temperature feedback freshness. See NOTICE.
 
 #ifndef ROBSTRIDE_SDK__ROBSTRIDE_MOTOR_HPP_
 #define ROBSTRIDE_SDK__ROBSTRIDE_MOTOR_HPP_

@@ -1,0 +1,21 @@
+RobstrideSDK
+
+Copyright 2026 Minjo Kim
+Licensed under the Apache License, Version 2.0; see LICENSE.
+The upstream LICENSE and source attribution are retained without alteration.
+
+Source: https://github.com/kmj060703/RobstrideSDK
+Fork history: https://github.com/griswaldbrooks/RobstrideSDK
+Maintained fork: https://github.com/PickNikRobotics/RobstrideSDK
+
+The PickNik fork retains source history through
+21a47cbeb99186dad2ea22aec8bca6305e4105a7, including
+15c74142ae99d98d9a61270ebfa1d9bceacd1edb: Type 0x15 source-motor routing,
+little-endian fault/warning decoding, and complete Type-2 temperature feedback
+freshness. Offline receive-path regression tests retain their author notice.
+
+PickNik Inc. modifications (2026): corrected fault-frame dispatch and decoding;
+temperature-feedback timestamps; standalone CMake/CTest support; fork-specific
+documentation and notice installation. The migration makes no new changes to
+wire encoding, actuator limit tables, retry handling or CAN transport behavior.
+These notices do not change the license or claim physical qualification.

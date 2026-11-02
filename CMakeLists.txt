@@ -1,3 +1,4 @@
+# Modified by PickNik Inc., 2026: standalone fault-decoder tests and notice installation.
 cmake_minimum_required(VERSION 3.10)
 project(robstride_sdk VERSION 0.1.0 LANGUAGES CXX)
 
@@ -36,6 +37,8 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY include/
   DESTINATION include
 )
+
+install(FILES LICENSE NOTICE README.md DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   add_executable(test_fault_feedback test/test_fault_feedback.cpp)

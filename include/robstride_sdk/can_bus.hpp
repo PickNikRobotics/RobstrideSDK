@@ -1,5 +1,7 @@
 // Copyright 2026 Minjo Kim
 // SPDX-License-Identifier: Apache-2.0
+// Modified by PickNik Inc., 2026: testable receive dispatch with corrected fault
+// source routing. See NOTICE for source history.
 
 #ifndef ROBSTRIDE_SDK__CAN_BUS_HPP_
 #define ROBSTRIDE_SDK__CAN_BUS_HPP_
