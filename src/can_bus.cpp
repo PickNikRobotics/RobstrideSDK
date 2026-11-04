@@ -1,5 +1,20 @@
 // Copyright 2026 Minjo Kim
 // SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Modified by PickNik Inc., 2026: route Type 0x15 feedback by source motor ID.
+// See NOTICE for source history.
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -177,7 +192,7 @@ void CanBus::DispatchFrame(const can_frame & frame)
   if (parsed.comm_type == COMM_MOTOR_FEEDBACK) {
     source_motor_id = static_cast<uint8_t>(parsed.data_area_2 & 0xFF);
   } else if (parsed.comm_type == COMM_FAULT_FEEDBACK) {
-    source_motor_id = static_cast<uint8_t>((parsed.data_area_2 >> 8) & 0xFF);
+    source_motor_id = static_cast<uint8_t>(parsed.data_area_2 & 0xFF);
   } else {
     return;
   }
@@ -204,7 +219,8 @@ void CanBus::ReadThreadMain()
 
   struct epoll_event events[4];
   while (running_.load(std::memory_order_relaxed)) {
-    const int n_events = epoll_wait(epoll_fd_, events, 4, 200 /* ms, allows Stop() to be noticed */);
+    // Bounded wait allows Stop() to be noticed even without incoming frames.
+    const int n_events = epoll_wait(epoll_fd_, events, 4, 200);
     if (n_events <= 0) {
       continue;
     }

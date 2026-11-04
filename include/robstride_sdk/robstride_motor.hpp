@@ -1,5 +1,20 @@
 // Copyright 2026 Minjo Kim
 // SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Modified by PickNik Inc., 2026: decode little-endian fault/warning words and
+// track complete Type-2 temperature feedback freshness. See NOTICE.
 
 #ifndef ROBSTRIDE_SDK__ROBSTRIDE_MOTOR_HPP_
 #define ROBSTRIDE_SDK__ROBSTRIDE_MOTOR_HPP_
@@ -34,7 +49,11 @@ struct MotorState
   std::atomic<uint8_t> run_state{static_cast<uint8_t>(RunState::RESET)};
   std::atomic<bool> fault_present{false};
   std::atomic<uint32_t> fault_bits{0};
+  std::atomic<uint32_t> warning_bits{0};
   std::atomic<uint64_t> last_update_ns{0};
+  // Only a complete Type-2 frame contains temperature/run-state feedback.
+  // Faults, parameter replies and truncated frames must not refresh its age.
+  std::atomic<uint64_t> last_feedback_ns{0};
 };
 
 class RobstrideMotor
@@ -152,12 +171,21 @@ public:
       state_.fault_present.store(fault6 != 0, std::memory_order_relaxed);
       const uint8_t mode = static_cast<uint8_t>((data_area_2 >> 14) & 0x03);
       state_.run_state.store(mode, std::memory_order_relaxed);
+      state_.last_feedback_ns.store(now_ns, std::memory_order_release);
     } else if (comm_type == COMM_FAULT_FEEDBACK && dlc >= 4) {
-      const uint32_t fault = (static_cast<uint32_t>(data[0]) << 24) |
-        (static_cast<uint32_t>(data[1]) << 16) |
-        (static_cast<uint32_t>(data[2]) << 8) | data[3];
+      const uint32_t fault = static_cast<uint32_t>(data[0]) |
+        (static_cast<uint32_t>(data[1]) << 8) |
+        (static_cast<uint32_t>(data[2]) << 16) |
+        (static_cast<uint32_t>(data[3]) << 24);
       state_.fault_bits.store(fault, std::memory_order_relaxed);
       state_.fault_present.store(fault != 0, std::memory_order_relaxed);
+      if (dlc >= 8) {
+        const uint32_t warning = static_cast<uint32_t>(data[4]) |
+          (static_cast<uint32_t>(data[5]) << 8) |
+          (static_cast<uint32_t>(data[6]) << 16) |
+          (static_cast<uint32_t>(data[7]) << 24);
+        state_.warning_bits.store(warning, std::memory_order_relaxed);
+      }
     }
   }
 

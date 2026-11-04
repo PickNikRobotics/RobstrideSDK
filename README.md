@@ -1,5 +1,14 @@
 # robstride_sdk
 
+<!-- Modified by PickNik Inc., 2026: fault-decoding and freshness provenance, fork documentation and notices. -->
+
+This is the PickNik fork of RobstrideSDK. [NOTICE](NOTICE) records the retained
+upstream and patched source history. Type 0x15 fault and warning words are
+little-endian and decoded here; consumers must not byte-swap them again.
+Temperature freshness advances only for a complete Type-2 feedback frame.
+Use the matching reviewed revisions selected by your robot workspace, not an
+assumption that unmerged changes are on a fork's default branch.
+
 ## 1. Introduction
 
 Standalone C++17 SDK for the RobStride CAN actuator protocol (RS00–RS06). No ROS dependency — this package only talks to SocketCAN. It is consumed by [robstride_hardware_interface](https://github.com/kmj060703/robstride_hardware_interface).
@@ -90,4 +99,22 @@ RobStride motors run at 1 Mbps CAN 2.0 with extended (29-bit) IDs. Bring the int
 
 ## 8. License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+Apache License 2.0. The unmodified [LICENSE](LICENSE) and source attribution
+[NOTICE](NOTICE) are installed with the SDK, including standalone CMake installs.
+
+## Offline regression tests
+
+The fault-feedback tests exercise bus dispatch and motor decoding without opening
+a CAN interface. They can also run without ROS/ament:
+
+```sh
+cmake -S . -B build -DBUILD_TESTING=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+Type 0x15 stores little-endian fault and warning words in
+`state().fault_bits` and `state().warning_bits`. Only the fault word sets
+`fault_present`; Type 2 updates its summary fault flag while retaining both
+detailed words. Four-byte fault frames update the fault word and retain the
+previous warning word.

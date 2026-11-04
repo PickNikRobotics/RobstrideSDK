@@ -1,3 +1,4 @@
+# Modified by PickNik Inc., 2026: standalone fault-decoder tests and notice installation.
 cmake_minimum_required(VERSION 3.10)
 project(robstride_sdk VERSION 0.1.0 LANGUAGES CXX)
 
@@ -10,7 +11,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake QUIET)
+include(CTest)
 
 add_library(${PROJECT_NAME}
   SHARED
@@ -36,13 +38,33 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
+install(FILES LICENSE NOTICE README.md DESTINATION share/${PROJECT_NAME})
+
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  add_executable(test_fault_feedback test/test_fault_feedback.cpp)
+  target_link_libraries(test_fault_feedback PRIVATE ${PROJECT_NAME})
+  foreach(test_case routing routing_without_motor_zero fault_bits overtemperature
+      warning_bits short_frame motor_feedback temperature_freshness)
+    add_test(NAME fault_feedback_${test_case} COMMAND test_fault_feedback ${test_case})
+  endforeach()
+  if(ament_cmake_FOUND)
+    # Preserve the exact upstream license rather than ament's different template.
+    file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE" license_sha256)
+    if(NOT license_sha256 STREQUAL "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1")
+      message(FATAL_ERROR "LICENSE must remain byte-identical to the upstream Apache-2.0 license")
+    endif()
+    # Explicit source paths avoid the unconditionally added repository LICENSE.
+    find_package(ament_cmake_copyright REQUIRED)
+    ament_copyright(include src test CONTRIBUTING.md)
+    list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_copyright)
+    find_package(ament_lint_auto REQUIRED)
+    ament_lint_auto_find_test_dependencies()
+  endif()
 endif()
 
-ament_export_include_directories(include)
-ament_export_libraries(${PROJECT_NAME})
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-
-ament_package()
+if(ament_cmake_FOUND)
+  ament_export_include_directories(include)
+  ament_export_libraries(${PROJECT_NAME})
+  ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+  ament_package()
+endif()
